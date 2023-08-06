@@ -37,6 +37,8 @@ dependencies:
   meta: ^1.9.1
   markdown: ^7.1.1
   system_resources: ^1.6.0
+  datadog_flutter_plugin: ^1.5.1
+  vm_service: ^11.9.0
 
 dev_dependencies:
   flutter_test:

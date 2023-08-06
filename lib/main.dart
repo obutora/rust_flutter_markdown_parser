@@ -36,43 +36,24 @@ class HomeScreen extends StatelessWidget {
         child: Center(
           child: ElevatedButton(
             onPressed: () async {
-              print('Large Data -----------------');
-              final measure = Measure(
-                  Markdown.markdownToHtml, api.markdownToHtml, rawData, 100);
-              await measure.record();
+              //161ms
+              // final dartMeasure = Measure(
+              //   Markdown.markdownToHtml,
+              //   api.markdownToHtml,
+              //   rawData,
+              //   100,
+              // );
+              // await dartMeasure.recordDart();
 
-              print('-----------------');
-
-              final largeMeasure = Measure(
-                  Markdown.markdownToHtml, api.markdownToHtml, rawData, 1000);
-              await largeMeasure.record();
-
-              print('light Data -----------------');
-
-              final lightMeasure = Measure(Markdown.markdownToHtml,
-                  api.markdownToHtml, lightRawData, 100);
-              await lightMeasure.record();
-
-              print('-----------------');
-
-              final lightManyMeasure = Measure(Markdown.markdownToHtml,
-                  api.markdownToHtml, lightRawData, 1000);
-              await lightManyMeasure.record();
-
-              print('MyData -----------------');
-
-              final myMeasyre = Measure(
-                  Markdown.markdownToHtml, api.markdownToHtml, myRawData, 100);
-              await myMeasyre.record();
-
-              print('-----------------');
-
-              final myMeasyre2 = Measure(
-                  Markdown.markdownToHtml, api.markdownToHtml, myRawData, 100);
-              await myMeasyre2.record();
-              // final hello = await api.hello();
-              // final m = await api.markdownToHtml(markdown: 'Hello');
-              // print(m);
+              // myData
+              //64ms
+              final rustMeasure = Measure(
+                Markdown.markdownToHtml,
+                api.markdownToHtml,
+                rawData,
+                100,
+              );
+              await rustMeasure.recordRust();
             },
             child: const Text('Markdown Test By Dart'),
           ),

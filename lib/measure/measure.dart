@@ -1,4 +1,8 @@
 import 'dart:math' as Math;
+import 'dart:developer' as developer;
+
+import 'package:vm_service/vm_service.dart';
+import 'package:vm_service/vm_service_io.dart';
 
 enum MeasureType { dart, rust }
 
@@ -7,6 +11,7 @@ class Measure {
   List<int> durationMilliseconds = [];
   String dartMarkdownResult = '';
   String rustMarkdownResult = '';
+  List<int> memoryUsageList = [];
 
   final String markdownText;
   final String Function(String) dartMarkdownToHtml;
@@ -22,8 +27,41 @@ class Measure {
     await measure(MeasureType.rust);
   }
 
+  Future<void> recordDart() async => await measure(MeasureType.dart);
+  Future<void> recordRust() async => await measure(MeasureType.rust);
+
+  Future<MemoryUsage> getMemoryUsage() async {
+    developer.ServiceProtocolInfo info = await developer.Service.getInfo();
+    VmService service =
+        await vmServiceConnectUri(info.serverWebSocketUri.toString());
+    VM vm = await service.getVM();
+    String? isolateId = vm.isolates?.first.id;
+    MemoryUsage mem;
+    if (isolateId == null) {
+      mem = MemoryUsage(externalUsage: 0, heapCapacity: 0, heapUsage: 0);
+    } else {
+      mem = await service.getMemoryUsage(isolateId);
+    }
+    return mem;
+  }
+
+  Future<double> getMemoryUsagePercentage() async {
+    MemoryUsage mem = await getMemoryUsage();
+    return 100 * mem.heapUsage! / mem.heapCapacity!;
+  }
+
+  Future<int> getExternalUsage() async {
+    MemoryUsage mem = await getMemoryUsage();
+    return mem.externalUsage!;
+  }
+
   Future<void> measure(MeasureType type) async {
     measureStart(type);
+    // final sys = await api.systemInfo();
+    // print('memory usage: ${sys} %');
+    print('memory usage: ${await getExternalUsage()}');
+    // final preMemUsage = await getMemoryUsagePercentage();
+    // print('pre Memory Usage : ${preMemUsage.toStringAsFixed(1)} %');
 
     while (index < tryNum) {
       final preTime = DateTime.now();
@@ -41,13 +79,26 @@ class Measure {
       final diff = postTime.difference(preTime).inMicroseconds;
       durationMilliseconds.add(diff);
 
+      final mem = await getExternalUsage();
+      memoryUsageList.add(mem);
+
       index++;
     }
+
+    print('memory usage: ${await getExternalUsage()}');
+
+    // final postMemUsage = await getMemoryUsagePercentage();
+    // print('post Memory Usage : ${postMemUsage.toStringAsFixed(1)} %');
+
+    // print(
+    //     'diff Memory Usage : ${(postMemUsage - preMemUsage).toStringAsFixed(1)} %');
+
     printAverageTime();
     printMaxTime();
     printMinTime();
 
-    printMarkdownResult(type);
+    print(memoryUsageList);
+
     reset();
   }
 
@@ -83,16 +134,5 @@ class Measure {
   void printMinTime() {
     final min = durationMilliseconds.reduce(Math.min);
     print('min time: $min μs');
-  }
-
-  void printMarkdownResult(MeasureType type) {
-    switch (type) {
-      case MeasureType.dart:
-        print('dart result: ${dartMarkdownResult.length}');
-        break;
-      case MeasureType.rust:
-        print('rust result: ${rustMarkdownResult.length}');
-        break;
-    }
   }
 }

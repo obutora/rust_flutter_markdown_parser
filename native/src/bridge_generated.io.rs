@@ -11,6 +11,11 @@ pub extern "C" fn wire_markdown_to_html(port_: i64, markdown: *mut wire_uint_8_l
     wire_markdown_to_html_impl(port_, markdown)
 }
 
+#[no_mangle]
+pub extern "C" fn wire_system_info(port_: i64) {
+    wire_system_info_impl(port_)
+}
+
 // Section: allocate functions
 
 #[no_mangle]
